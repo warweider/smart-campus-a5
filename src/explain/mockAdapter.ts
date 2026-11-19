@@ -35,7 +35,7 @@ function composeExplanation(input: ExplainInput): string {
     case 'TOO_LONG':
       return `${slot} was rejected because it is longer than the maximum allowed duration of ${MAX_DURATION} minutes.`;
     case 'INVALID_TIME':
-      return `${slot} could not be checked because the times are invalid. Enter whole minutes with 0 <= start < end <= 1440.`;
+      return `${slot} could not be checked because the times are invalid. Enter whole minutes from 0 to 1440, with the start before the end.`;
   }
 }
 

@@ -1,13 +1,14 @@
 import type { Verdict, ReasonCode } from '@/availability';
-import { toHHMM, REASON_CODES } from '@/availability';
+import { toHHMM, REASON_CODES, DAY_MINUTES } from '@/availability';
 
 export { REASON_CODES };
 export type { ReasonCode };
 
 export type ExplainInput = {
   roomLabel: string;
-  start: number;
-  end: number;
+  // null when the entered times are not a valid interval (M1): never invent a slot.
+  start: number | null;
+  end: number | null;
   isAvailable: boolean;
   reasonCode: ReasonCode;
 };
@@ -27,10 +28,14 @@ export function validateExplainInput(raw: unknown): ExplainInput | null {
   if (typeof r.roomLabel !== 'string') return null;
   const roomLabel = r.roomLabel.trim();
   if (roomLabel === '' || roomLabel.length > 100) return null;
-  if (!Number.isInteger(r.start) || !Number.isInteger(r.end)) return null;
-  const start = r.start as number;
-  const end = r.end as number;
-  if (start < 0 || end < 0 || start > 1440 || end > 1440) return null;
+  let start: number | null = null;
+  let end: number | null = null;
+  if (r.start !== null || r.end !== null) {
+    if (!Number.isInteger(r.start) || !Number.isInteger(r.end)) return null;
+    start = r.start as number;
+    end = r.end as number;
+    if (start < 0 || start >= end || end > DAY_MINUTES) return null;
+  }
   if (typeof r.isAvailable !== 'boolean') return null;
   if (typeof r.reasonCode !== 'string') return null;
   if (!REASON_CODES.includes(r.reasonCode as ReasonCode)) return null;
@@ -62,7 +67,31 @@ export function validateExplanation(raw: unknown): string | null {
 }
 
 export function describeSlot(input: ExplainInput): string {
+  if (input.start === null || input.end === null) return `${input.roomLabel} (requested times)`;
   return `${input.roomLabel} ${toHHMM(input.start)}–${toHHMM(input.end)}`;
+}
+
+// M1: builds the explanation input from what the user actually entered.
+// Times are passed on only if they form a valid interval 0 <= start < end <= 1440;
+// otherwise start/end are null instead of clamped or inverted values.
+export function buildExplainInput(
+  roomLabel: string,
+  startRaw: string,
+  endRaw: string,
+  verdict: Verdict,
+): ExplainInput {
+  const s = startRaw.trim();
+  const e = endRaw.trim();
+  const start = Number(s);
+  const end = Number(e);
+  const valid = /^\d+$/.test(s) && /^\d+$/.test(e) && start < end && end <= DAY_MINUTES;
+  return {
+    roomLabel,
+    start: valid ? start : null,
+    end: valid ? end : null,
+    isAvailable: verdict.kind === 'available',
+    reasonCode: deriveReasonCode(verdict),
+  };
 }
 
 export const MAX_EXPLANATION_LENGTH = 300;

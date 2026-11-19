@@ -11,7 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { evaluate, toHHMM, DAY_MINUTES, MAX_DURATION, type Booking, type Verdict } from '@/availability';
-import { deriveReasonCode, type ExplainInput } from './explain/contract';
+import { buildExplainInput, type ExplainInput } from './explain/contract';
 import { getExplanation, type ExplainResult } from './explain/explainService';
 
 const QUESTION_MAX = 200;
@@ -65,15 +65,7 @@ function App() {
 
   const handleExplain = () => {
     if (!verdict) return;
-    const start = Number(startInput.trim());
-    const end = Number(endInput.trim());
-    const input: ExplainInput = {
-      roomLabel: ROOM_NAME,
-      start: Number.isInteger(start) && start >= 0 ? start : 0,
-      end: Number.isInteger(end) && end <= 1440 ? end : 1440,
-      isAvailable: verdict.kind === 'available',
-      reasonCode: deriveReasonCode(verdict),
-    };
+    const input: ExplainInput = buildExplainInput(ROOM_NAME, startInput, endInput, verdict);
     setExplainInput(input);
     setExplainState({ status: 'loading' });
     getExplanation(input).then((result) => {
