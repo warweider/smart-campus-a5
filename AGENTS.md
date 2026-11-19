@@ -20,7 +20,7 @@ deterministic, mocked explanation; it never changes the verdict.
 | `src/explain/contract.ts` | Types and validators for the explanation feature (input/output checks, reason codes). |
 | `src/explain/mockAdapter.ts` | Mock explanation provider (no network). `?mock=error` / `?mock=timeout` simulate failures. |
 | `src/explain/explainService.ts` | Calls the adapter with a 3 s timeout and falls back to a deterministic message. |
-| `tests/*.test.ts` | Vitest suites. `availability.test.ts` (T01-T12), `regression.test.ts` (RG01-RG03) and any newer suites. |
+| `tests/*.test.ts` | Vitest suites: `availability.test.ts` (T01-T12), `regression.test.ts` (RG01-RG03), `reasonCode.test.ts` (RC), `mitigation_m1.test.ts` (M1), `explain_service.test.ts` (EX01-EX08). |
 | `.bolt/` | Bolt.new project settings. Do not edit. |
 
 Data flow: inputs -> `evaluate()` -> `Verdict` -> result panel. The explanation feature reads the verdict, never writes it.
@@ -29,7 +29,8 @@ Data flow: inputs -> `evaluate()` -> `Verdict` -> result panel. The explanation 
 Node 20+ (verified with Node 22). Install from the lockfile only.
 ```
 npm ci                      # reproducible install from package-lock.json
-npm run typecheck           # tsc --noEmit -p tsconfig.app.json  (plain `npx tsc --noEmit` checks NO files)
+npm run typecheck           # tsc on tsconfig.app.json (src, tests) AND tsconfig.node.json (vite.config.ts);
+                            # plain `npx tsc --noEmit` checks NO files
 npm run lint                # eslint .
 npm test                    # vitest run
 npx vitest run --reporter=verbose
