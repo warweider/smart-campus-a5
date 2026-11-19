@@ -1,0 +1,152 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index 64d1d6a..297f03f 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -20,7 +20,7 @@ deterministic, mocked explanation; it never changes the verdict.
+ | `src/explain/contract.ts` | Types and validators for the explanation feature (input/output checks, reason codes). |
+ | `src/explain/mockAdapter.ts` | Mock explanation provider (no network). `?mock=error` / `?mock=timeout` simulate failures. |
+ | `src/explain/explainService.ts` | Calls the adapter with a 3 s timeout and falls back to a deterministic message. |
+-| `tests/*.test.ts` | Vitest suites. `availability.test.ts` (T01-T12), `regression.test.ts` (RG01-RG03) and any newer suites. |
++| `tests/*.test.ts` | Vitest suites: `availability.test.ts` (T01-T12), `regression.test.ts` (RG01-RG03), `reasonCode.test.ts` (RC), `mitigation_m1.test.ts` (M1), `explain_service.test.ts` (EX01-EX08). |
+ | `.bolt/` | Bolt.new project settings. Do not edit. |
+ 
+ Data flow: inputs -> `evaluate()` -> `Verdict` -> result panel. The explanation feature reads the verdict, never writes it.
+@@ -29,7 +29,8 @@ Data flow: inputs -> `evaluate()` -> `Verdict` -> result panel. The explanation
+ Node 20+ (verified with Node 22). Install from the lockfile only.
+ ```
+ npm ci                      # reproducible install from package-lock.json
+-npm run typecheck           # tsc --noEmit -p tsconfig.app.json  (plain `npx tsc --noEmit` checks NO files)
++npm run typecheck           # tsc on tsconfig.app.json (src, tests) AND tsconfig.node.json (vite.config.ts);
++                            # plain `npx tsc --noEmit` checks NO files
+ npm run lint                # eslint .
+ npm test                    # vitest run
+ npx vitest run --reporter=verbose
+diff --git a/package.json b/package.json
+index ae4c0f8..1abf137 100644
+--- a/package.json
++++ b/package.json
+@@ -8,7 +8,7 @@
+     "build": "vite build",
+     "lint": "eslint .",
+     "preview": "vite preview",
+-    "typecheck": "tsc --noEmit -p tsconfig.app.json",
++    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
+     "test": "vitest run",
+     "verify": "npm run typecheck && npm run lint && npm test && npm run build"
+   },
+diff --git a/src/App.tsx b/src/App.tsx
+index 055c0fa..23084c7 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -11,7 +11,7 @@ import {
+   Sparkles,
+ } from 'lucide-react';
+ import { evaluate, toHHMM, DAY_MINUTES, MAX_DURATION, type Booking, type Verdict } from '@/availability';
+-import { deriveReasonCode, type ExplainInput } from './explain/contract';
++import { buildExplainInput, type ExplainInput } from './explain/contract';
+ import { getExplanation, type ExplainResult } from './explain/explainService';
+ 
+ const QUESTION_MAX = 200;
+@@ -65,15 +65,7 @@ function App() {
+ 
+   const handleExplain = () => {
+     if (!verdict) return;
+-    const start = Number(startInput.trim());
+-    const end = Number(endInput.trim());
+-    const input: ExplainInput = {
+-      roomLabel: ROOM_NAME,
+-      start: Number.isInteger(start) && start >= 0 ? start : 0,
+-      end: Number.isInteger(end) && end <= 1440 ? end : 1440,
+-      isAvailable: verdict.kind === 'available',
+-      reasonCode: deriveReasonCode(verdict),
+-    };
++    const input: ExplainInput = buildExplainInput(ROOM_NAME, startInput, endInput, verdict);
+     setExplainInput(input);
+     setExplainState({ status: 'loading' });
+     getExplanation(input).then((result) => {
+diff --git a/src/explain/contract.ts b/src/explain/contract.ts
+index 9c1be15..7020963 100644
+--- a/src/explain/contract.ts
++++ b/src/explain/contract.ts
+@@ -1,13 +1,14 @@
+ import type { Verdict, ReasonCode } from '@/availability';
+-import { toHHMM, REASON_CODES } from '@/availability';
++import { toHHMM, REASON_CODES, DAY_MINUTES } from '@/availability';
+ 
+ export { REASON_CODES };
+ export type { ReasonCode };
+ 
+ export type ExplainInput = {
+   roomLabel: string;
+-  start: number;
+-  end: number;
++  // null when the entered times are not a valid interval (M1): never invent a slot.
++  start: number | null;
++  end: number | null;
+   isAvailable: boolean;
+   reasonCode: ReasonCode;
+ };
+@@ -27,10 +28,14 @@ export function validateExplainInput(raw: unknown): ExplainInput | null {
+   if (typeof r.roomLabel !== 'string') return null;
+   const roomLabel = r.roomLabel.trim();
+   if (roomLabel === '' || roomLabel.length > 100) return null;
+-  if (!Number.isInteger(r.start) || !Number.isInteger(r.end)) return null;
+-  const start = r.start as number;
+-  const end = r.end as number;
+-  if (start < 0 || end < 0 || start > 1440 || end > 1440) return null;
++  let start: number | null = null;
++  let end: number | null = null;
++  if (r.start !== null || r.end !== null) {
++    if (!Number.isInteger(r.start) || !Number.isInteger(r.end)) return null;
++    start = r.start as number;
++    end = r.end as number;
++    if (start < 0 || start >= end || end > DAY_MINUTES) return null;
++  }
+   if (typeof r.isAvailable !== 'boolean') return null;
+   if (typeof r.reasonCode !== 'string') return null;
+   if (!REASON_CODES.includes(r.reasonCode as ReasonCode)) return null;
+@@ -62,7 +67,31 @@ export function validateExplanation(raw: unknown): string | null {
+ }
+ 
+ export function describeSlot(input: ExplainInput): string {
++  if (input.start === null || input.end === null) return `${input.roomLabel} (requested times)`;
+   return `${input.roomLabel} ${toHHMM(input.start)}–${toHHMM(input.end)}`;
+ }
+ 
++// M1: builds the explanation input from what the user actually entered.
++// Times are passed on only if they form a valid interval 0 <= start < end <= 1440;
++// otherwise start/end are null instead of clamped or inverted values.
++export function buildExplainInput(
++  roomLabel: string,
++  startRaw: string,
++  endRaw: string,
++  verdict: Verdict,
++): ExplainInput {
++  const s = startRaw.trim();
++  const e = endRaw.trim();
++  const start = Number(s);
++  const end = Number(e);
++  const valid = /^\d+$/.test(s) && /^\d+$/.test(e) && start < end && end <= DAY_MINUTES;
++  return {
++    roomLabel,
++    start: valid ? start : null,
++    end: valid ? end : null,
++    isAvailable: verdict.kind === 'available',
++    reasonCode: deriveReasonCode(verdict),
++  };
++}
++
+ export const MAX_EXPLANATION_LENGTH = 300;
+diff --git a/src/explain/mockAdapter.ts b/src/explain/mockAdapter.ts
+index 67f31cd..99cc54a 100644
+--- a/src/explain/mockAdapter.ts
++++ b/src/explain/mockAdapter.ts
+@@ -35,7 +35,7 @@ function composeExplanation(input: ExplainInput): string {
+     case 'TOO_LONG':
+       return `${slot} was rejected because it is longer than the maximum allowed duration of ${MAX_DURATION} minutes.`;
+     case 'INVALID_TIME':
+-      return `${slot} could not be checked because the times are invalid. Enter whole minutes with 0 <= start < end <= 1440.`;
++      return `${slot} could not be checked because the times are invalid. Enter whole minutes from 0 to 1440, with the start before the end.`;
+   }
+ }
+ 

@@ -1,0 +1,8 @@
+Yes, the change was completely justified. Parsing human-readable wording (`startsWith`) tightly coupled presentation copy to machine logic, meaning any minor UI phrasing edit silently broke reason-code classification and downstream explanations. Moving `code` onto the `Verdict` discriminated union makes the contract explicit, exhaustive, and type-safe.
+
+Neither a Strategy nor an Adapter pattern is appropriate for `evaluate()` itself:
+
+* No pattern is needed for the booking rules: `evaluate()` validates five fixed, sequential, short-circuiting acceptance criteria (AC1–AC5). Introducing a Strategy pattern (one object per rule) would add class boilerplate, indirection, and ordering complexity without any runtime rule swapping or multi-tenant extensibility requirements—violating the repository's convention for minimal, straightforward pure functions.
+* Adapter belongs at the boundary, not in the rules: An Adapter is only useful for wrapping external explanation providers (`mockExplainAdapter` vs. a future LLM client) to normalize untrusted I/O into the internal `ExplainOutput` contract.
+
+For core rule evaluation, a plain pure function returning a discriminated union is the cleanest, most idiomatic TypeScript design.

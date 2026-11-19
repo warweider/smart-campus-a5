@@ -1,0 +1,5 @@
+PROBE 900 700 false -> 900 700 INVALID_TIME | true | Fallback: the times for Room B-204 15:00–11:40 are invalid and were not checked.
+PROBE abc def false -> 0 1440 INVALID_TIME | true | Fallback: the times for Room B-204 00:00–24:00 are invalid and were not checked.
+PROBE abc xyz true -> 0 1440 BLOCKED | false | Room B-204 00:00–24:00 is unavailable because the room is currently blocked; every request is declined while the block is active.
+PROBE 800 700 true -> 800 700 BLOCKED | false | Room B-204 13:20–11:40 is unavailable because the room is currently blocked; every request is declined while the block is active.
+      Tests  4 passed (4)

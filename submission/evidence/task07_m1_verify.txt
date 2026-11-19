@@ -1,0 +1,45 @@
+
+> vite-react-typescript-starter@0.0.0 verify
+> npm run typecheck && npm run lint && npm test && npm run build
+
+
+> vite-react-typescript-starter@0.0.0 typecheck
+> tsc --noEmit -p tsconfig.app.json
+
+
+> vite-react-typescript-starter@0.0.0 lint
+> eslint .
+
+
+> vite-react-typescript-starter@0.0.0 test
+> vitest run
+
+
+ RUN  v1.6.1 /home/claude/work/repo
+
+ ✓ tests/availability.test.ts  (12 tests) 4ms
+ ✓ tests/mitigation_m1.test.ts  (10 tests) 4813ms
+ ✓ tests/regression.test.ts  (3 tests) 3ms
+ ✓ tests/reasonCode.test.ts  (10 tests) 4ms
+
+ Test Files  4 passed (4)
+      Tests  35 passed (35)
+   Start at  10:07:11
+   Duration  5.76s (transform 143ms, setup 0ms, collect 159ms, tests 4.82s, environment 1ms, prepare 231ms)
+
+
+> vite-react-typescript-starter@0.0.0 build
+> vite build
+
+vite v5.4.8 building for production...
+transforming...
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 1572 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.71 kB │ gzip:  0.39 kB
+dist/assets/index-B7Fn3am8.css   16.83 kB │ gzip:  3.63 kB
+dist/assets/index-utPPTNjI.js   163.72 kB │ gzip: 51.88 kB
+✓ built in 2.62s

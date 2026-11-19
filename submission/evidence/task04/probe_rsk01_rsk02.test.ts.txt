@@ -1,0 +1,12 @@
+import { it } from 'vitest';
+import { evaluate } from '../src/availability';
+import { deriveReasonCode } from '../src/explain/contract';
+import { getExplanation } from '../src/explain/explainService';
+const B = [{ start: 600, end: 660 }];
+function build(s: string, e: string, blocked: boolean) { // copy of App.tsx handleExplain lines 68-76
+  const v = evaluate(s, e, 540, blocked, B); const start = Number(s.trim()); const end = Number(e.trim());
+  return { roomLabel: 'Room B-204', start: Number.isInteger(start) && start >= 0 ? start : 0,
+    end: Number.isInteger(end) && end <= 1440 ? end : 1440, isAvailable: v.kind === 'available', reasonCode: deriveReasonCode(v) };
+}
+for (const [s, e, b] of [['900','700',false],['abc','def',false],['abc','xyz',true],['800','700',true]] as const)
+  it(`RSK probe ${s}-${e} blocked=${b}`, async () => { const i = build(s, e, b); const r = await getExplanation(i); console.log('PROBE', s, e, b, '->', i.start, i.end, i.reasonCode, '|', r.usedFallback, '|', r.output.explanation); }, 10000);

@@ -1,0 +1,98 @@
+# M1 tests run against main (Task 03 commit 048665d, before M1)
+
+ RUN  v1.6.1 /tmp/wt_main
+
+ ❯ tests/mitigation_m1.test.ts  (10 tests | 10 failed) 611ms
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-0: abc-700 blocked=false -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-1: abc-def blocked=false -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-2: 1500-1600 blocked=false -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-3: 900-700 blocked=false -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-4: -5-30 blocked=false -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-5: abc-xyz blocked=true -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-6: 800-700 blocked=true -> no times in the explanation
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-valid: a valid interval keeps the real times
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-blocked-valid: blocked room with valid times keeps the times
+     → buildExplainInput is not a function
+   ❯ tests/mitigation_m1.test.ts > M1 INVALID_TIME explanation passes its own output validator (risk R09) > M1-10 the adapter answer is used, not the fallback
+     → expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-0: abc-700 blocked=false -> no times in the explanation
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-1: abc-def blocked=false -> no times in the explanation
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-2: 1500-1600 blocked=false -> no times in the explanation
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-3: 900-700 blocked=false -> no times in the explanation
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-4: -5-30 blocked=false -> no times in the explanation
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-5: abc-xyz blocked=true -> no times in the explanation
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-6: 800-700 blocked=true -> no times in the explanation
+TypeError: buildExplainInput is not a function
+ ❯ explainFor tests/mitigation_m1.test.ts:13:28
+     11| function explainFor(s: string, e: string, blocked = false) {
+     12|   const verdict = evaluate(s, e, NOW, blocked, B);
+     13|   return { verdict, input: buildExplainInput(ROOM, s, e, verdict) };
+       |                            ^
+     14| }
+     15| 
+ ❯ tests/mitigation_m1.test.ts:26:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-valid: a valid interval keeps the real times
+TypeError: buildExplainInput is not a function
+ ❯ explainFor tests/mitigation_m1.test.ts:13:28
+     11| function explainFor(s: string, e: string, blocked = false) {
+     12|   const verdict = evaluate(s, e, NOW, blocked, B);
+     13|   return { verdict, input: buildExplainInput(ROOM, s, e, verdict) };
+       |                            ^
+     14| }
+     15| 
+ ❯ tests/mitigation_m1.test.ts:35:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-blocked-valid: blocked room with valid times keeps the times
+TypeError: buildExplainInput is not a function
+ ❯ explainFor tests/mitigation_m1.test.ts:13:28
+     11| function explainFor(s: string, e: string, blocked = false) {
+     12|   const verdict = evaluate(s, e, NOW, blocked, B);
+     13|   return { verdict, input: buildExplainInput(ROOM, s, e, verdict) };
+       |                            ^
+     14| }
+     15| 
+ ❯ tests/mitigation_m1.test.ts:41:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  tests/mitigation_m1.test.ts > M1 INVALID_TIME explanation passes its own output validator (risk R09) > M1-10 the adapter answer is used, not the fallback
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/mitigation_m1.test.ts:49:28
+     47|   it('M1-10 the adapter answer is used, not the fallback', async () =>…
+     48|     const r = await getExplanation({ roomLabel: ROOM, start: 900, end:…
+     49|     expect(r.usedFallback).toBe(false);
+       |                            ^
+     50|   });
+     51| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ Test Files  1 failed (1)
+      Tests  10 failed (10)
+   Start at  10:07:27
+   Duration  949ms (transform 58ms, setup 0ms, collect 68ms, tests 611ms, environment 0ms, prepare 70ms)
+
+exit 1

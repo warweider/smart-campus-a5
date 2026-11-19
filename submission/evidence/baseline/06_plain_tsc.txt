@@ -1,0 +1,3 @@
+$ npx tsc --noEmit
+# run: 2026-11-19T04:46:31Z node v22.23.5
+# exit code: 0

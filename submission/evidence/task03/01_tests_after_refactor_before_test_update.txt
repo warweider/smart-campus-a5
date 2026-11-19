@@ -1,0 +1,60 @@
+
+ RUN  v1.6.1 /home/claude/work/repo
+
+ ❯ tests/availability.test.ts  (12 tests | 1 failed) 10ms
+   ❯ tests/availability.test.ts > AC5 result and non-mutation > T11 returns Available for a free slot
+     → expected { Object (kind, code) } to deeply equal { kind: 'available' }
+ ❯ tests/regression.test.ts  (3 tests | 1 failed) 10ms
+   ❯ tests/regression.test.ts > R1 the UI uses the tested rules (single source of truth) > RG03 the UI messages are produced by the tested module (AC6 wording kept)
+     → expected { kind: 'error', …(2) } to deeply equal { kind: 'error', …(1) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/availability.test.ts > AC5 result and non-mutation > T11 returns Available for a free slot
+AssertionError: expected { Object (kind, code) } to deeply equal { kind: 'available' }
+
+- Expected
++ Received
+
+  Object {
++   "code": "AVAILABLE",
+    "kind": "available",
+  }
+
+ ❯ tests/availability.test.ts:61:58
+     59| describe('AC5 result and non-mutation', () => {
+     60|   it('T11 returns Available for a free slot', () => {
+     61|     expect(evaluate('800', '830', NOW, false, bookings)).toEqual({ kin…
+       |                                                          ^
+     62|   });
+     63|   it('T12 does not change the bookings array (order and values)', () =…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/regression.test.ts > R1 the UI uses the tested rules (single source of truth) > RG03 the UI messages are produced by the tested module (AC6 wording kept)
+AssertionError: expected { kind: 'error', …(2) } to deeply equal { kind: 'error', …(1) }
+
+- Expected
++ Received
+
+  Object {
++   "code": "INVALID_TIME",
+    "kind": "error",
+    "reason": "Please enter both a start and an end time.",
+  }
+
+ ❯ tests/regression.test.ts:19:55
+     17|   });
+     18|   it('RG03 the UI messages are produced by the tested module (AC6 word…
+     19|     expect(evaluate('', '', NOW, false, UI_BOOKINGS)).toEqual({ kind: …
+       |                                                       ^
+     20|     expect(evaluate('500', '560', NOW, false, UI_BOOKINGS)).toEqual({ …
+     21|     expect(evaluate('630', '690', NOW, false, UI_BOOKINGS)).toEqual({ …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 13 passed (15)
+   Start at  09:48:47
+   Duration  502ms (transform 66ms, setup 0ms, collect 82ms, tests 20ms, environment 0ms, prepare 121ms)
+

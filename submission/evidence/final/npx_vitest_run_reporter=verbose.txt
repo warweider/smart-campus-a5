@@ -1,0 +1,67 @@
+$ npx vitest run --reporter=verbose
+# run: 2026-11-19T05:09:54Z node v22.23.5 commit 7cf1abc
+
+ RUN  v1.6.1 /home/claude/work/repo
+
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX01 accepts a well-formed input
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects null
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects unknown reason code
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects empty room label
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects room label over 100 chars
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects fractional minute
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects start after end
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects end beyond 1440
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects only one time null
+ ✓ tests/explain_service.test.ts > M2 input validation (untrusted adapter input) > EX02 rejects isAvailable not boolean
+ ✓ tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX03 rejects non-string
+ ✓ tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX03 rejects empty
+ ✓ tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX03 rejects HTML markup
+ ✓ tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX03 rejects control character
+ ✓ tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX03 rejects longer than 300 chars
+ ✓ tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX04 trims and accepts plain text
+ ✓ tests/explain_service.test.ts > M2 fallback behaviour > EX05 normal mode uses the adapter answer 602ms
+ ✓ tests/explain_service.test.ts > M2 fallback behaviour > EX06 adapter error (?mock=error) -> deterministic fallback 301ms
+ ✓ tests/explain_service.test.ts > M2 fallback behaviour > EX07 adapter slower than 3 s (?mock=timeout) -> fallback after the timeout
+ ✓ tests/explain_service.test.ts > M2 fallback behaviour > EX08 the explanation never changes the verdict (AC5) 602ms
+ ✓ tests/availability.test.ts > AC1 time validation > T01 rejects start >= end
+ ✓ tests/availability.test.ts > AC1 time validation > T02 rejects a start that is not after now
+ ✓ tests/availability.test.ts > AC1 time validation > T03 rejects non-integer input
+ ✓ tests/availability.test.ts > AC2 maximum duration > T04 allows exactly 120 minutes
+ ✓ tests/availability.test.ts > AC2 maximum duration > T05 rejects 121 minutes
+ ✓ tests/availability.test.ts > AC3 blocked room > T06 rejects every request for a blocked room
+ ✓ tests/availability.test.ts > AC4 overlap > T07 rejects a real overlap
+ ✓ tests/availability.test.ts > AC4 overlap > T08 allows a booking that touches the end of an existing one (660-700)
+ ✓ tests/availability.test.ts > AC4 overlap > T09 allows a booking that touches the start of an existing one (560-600)
+ ✓ tests/availability.test.ts > AC4 overlap > T10 isStrictOverlap is false for touching endpoints
+ ✓ tests/availability.test.ts > AC5 result and non-mutation > T11 returns Available for a free slot
+ ✓ tests/availability.test.ts > AC5 result and non-mutation > T12 does not change the bookings array (order and values)
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-0: abc-700 blocked=false -> no times in the explanation 603ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-1: abc-def blocked=false -> no times in the explanation 602ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-2: 1500-1600 blocked=false -> no times in the explanation 601ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-3: 900-700 blocked=false -> no times in the explanation 601ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-4: -5-30 blocked=false -> no times in the explanation 601ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-5: abc-xyz blocked=true -> no times in the explanation 601ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-6: 800-700 blocked=true -> no times in the explanation 601ms
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-valid: a valid interval keeps the real times
+ ✓ tests/mitigation_m1.test.ts > M1 no invented or inverted slot in the explanation > M1-blocked-valid: blocked room with valid times keeps the times
+ ✓ tests/mitigation_m1.test.ts > M1 INVALID_TIME explanation passes its own output validator (risk R09) > M1-10 the adapter answer is used, not the fallback 600ms
+ ✓ tests/regression.test.ts > R1 the UI uses the tested rules (single source of truth) > RG01 App.tsx imports evaluate from @/availability
+ ✓ tests/regression.test.ts > R1 the UI uses the tested rules (single source of truth) > RG02 App.tsx has no local copy of the booking rules
+ ✓ tests/regression.test.ts > R1 the UI uses the tested rules (single source of truth) > RG03 the UI messages are produced by the tested module (AC6 wording kept)
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 800-830 blocked=false -> AVAILABLE
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 630-690 blocked=false -> OVERLAP
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 800-830 blocked=true -> BLOCKED
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC -700 blocked=false -> INVALID_TIME
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC abc-700 blocked=false -> INVALID_TIME
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 1500-1600 blocked=false -> INVALID_TIME
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 700-650 blocked=false -> INVALID_TIME
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 500-560 blocked=false -> PAST_TIME
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC 800-921 blocked=false -> TOO_LONG
+ ✓ tests/reasonCode.test.ts > Task 03 explicit reason codes > RC10 the code does not depend on the message text
+
+ Test Files  5 passed (5)
+      Tests  55 passed (55)
+   Start at  10:09:54
+   Duration  7.53s (transform 120ms, setup 1ms, collect 168ms, tests 6.34s, environment 1ms, prepare 318ms)
+
+# exit code: 0

@@ -1,0 +1,26 @@
+## MUT1 drop HTML check: in src/explain/contract.ts replaced [if (/[<>]/.test(text) || hasControlChars(text)) return null;] -> [if (hasControlChars(text)) return null;]; ran: npx vitest run
+exit 1
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/explain_service.test.ts > M2 output validation (untrusted adapter output) > EX03 rejects HTML markup
+      Tests  1 failed | 54 passed (55)
+
+## MUT2 fallback flag wrong: in src/explain/explainService.ts replaced [return { output: { explanation: fallbackExplanation(input) }, usedFallback: true };] -> [return { output: { explanation: fallbackExplanation(input) }, usedFallback: false };]; ran: npx vitest run
+exit 1
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/explain_service.test.ts > M2 fallback behaviour > EX06 adapter error (?mock=error) -> deterministic fallback
+ FAIL  tests/explain_service.test.ts > M2 fallback behaviour > EX07 adapter slower than 3 s (?mock=timeout) -> fallback after the timeout
+      Tests  2 failed | 53 passed (55)
+
+## MUT3 type error in vite.config.ts, OLD typecheck command: in vite.config.ts replaced [plugins: [react()],] -> [plugins: [react()], base: 42,]; ran: npx tsc --noEmit -p tsconfig.app.json
+exit 0
+
+## MUT3 type error in vite.config.ts, NEW npm run typecheck: in vite.config.ts replaced [plugins: [react()],] -> [plugins: [react()], base: 42,]; ran: npm run typecheck
+exit 2
+vite.config.ts(7,23): error TS2769: No overload matches this call.
+
+## MUT4 reintroduce '<=' in INVALID_TIME text: in src/explain/mockAdapter.ts replaced [Enter whole minutes from 0 to 1440, with the start before the end.] -> [Enter whole minutes with 0 <= start < end <= 1440.]; ran: npx vitest run
+exit 1
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/mitigation_m1.test.ts > M1 INVALID_TIME explanation passes its own output validator (risk R09) > M1-10 the adapter answer is used, not the fallback
+      Tests  1 failed | 54 passed (55)
+

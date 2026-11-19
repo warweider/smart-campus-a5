@@ -1,0 +1,16 @@
+$ npx tsc --noEmit -p tsconfig.node.json
+exit 0
+
+$ grep -rn "explain" tests/
+tests/reasonCode.test.ts:4:import { deriveReasonCode } from '../src/explain/contract';
+
+$ grep -n "question\|1440\|from '\./" src/App.tsx
+14:import { deriveReasonCode, type ExplainInput } from './explain/contract';
+15:import { getExplanation, type ExplainResult } from './explain/explainService';
+32:  const [question, setQuestion] = useState('');
+73:      end: Number.isInteger(end) && end <= 1440 ? end : 1440,
+267:                    value={question}
+363:  const ticks = [0, 360, 720, 1080, 1440];
+
+$ grep -n disabled src/App.tsx
+286:                  disabled={explainState.status === 'loading'}

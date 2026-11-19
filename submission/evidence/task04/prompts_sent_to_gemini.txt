@@ -1,0 +1,13 @@
+Tool: Gemini 4 Hydrogen (separate chat, outside the project). Date: 2026-11-19.
+Context: attached file context_for_ai.md (root AGENTS.md pasted explicitly, all source/test files with line numbers, baseline check results).
+
+PROMPT 1 (risk review):
+You are reviewing the repository in the attached file in READ-ONLY mode. Do not write code, do not propose full rewrites, do not modify any files.
+Follow the AGENTS.md rules included in the file (I pasted them because this chat does not load them automatically).
+Propose 8 candidate risks covering at least these categories: correctness, maintainability, security, dependency, agent operations.
+For each risk give: ID, category, cause -> event -> consequence, affected file and line numbers, the exact code line or command that would confirm it, and your confidence (high/medium/low).
+Mark clearly which risks you are only guessing about.
+
+PROMPT 2 (pattern decision):
+In the previous version, deriveReasonCode in src/explain/contract.ts guessed the reason code from the message text (startsWith on the wording). It was changed to an explicit `code` field on Verdict.
+Was that change justified? Would a Strategy pattern (one object per rule) or an Adapter be better here, or is no pattern needed? Answer in under 200 words, no code.

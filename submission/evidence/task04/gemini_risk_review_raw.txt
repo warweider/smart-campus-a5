@@ -1,0 +1,154 @@
+Following `AGENTS.md` (Section 7: read-only mode, no code written, no full rewrites, no file modifications, and noting that `AGENTS.md` was provided via the attached context file rather than auto-loaded), here are 8 candidate risks across the required categories.
+
+---
+
+### Risk 1: Corrupted time intervals and contradictory `ExplainInput` on invalid verdicts
+
+* **ID:** `RSK-01`
+* **Category:** Correctness
+* **Cause -> Event -> Consequence:** In `handleExplain()`, invalid or out-of-bounds user inputs are coerced via fallback clamping (`start >= 0 ? start : 0` and `end <= 1440 ? end : 1440`) without preserving `start < end` or rejecting non-numeric strings (`Number('abc')` becomes `NaN`, falling back to `0` and `1440`) -> When a user checks an invalid range such as `start="900"`, `end="700"` (or `start="abc"`, `end="def"`) and clicks "Explain availability", `input` becomes `{ start: 900, end: 700 }` or `{ start: 0, end: 1440 }` -> The explanation panel either displays an inverted time interval (`Room B-204 15:00–11:40`) or falsely describes a valid full-day interval (`00:00–24:00`) while stating the times are invalid (`INVALID_TIME`).
+* **Affected file and line numbers:** `src/App.tsx`, lines 68–76 (and `src/explain/contract.ts`, lines 30–34, which validates `0 <= start <= 1440` and `0 <= end <= 1440` without enforcing `start < end` when `reasonCode !== 'INVALID_TIME'`).
+* **Exact code line or command that would confirm it:**
+```tsx
+start: Number.isInteger(start) && start >= 0 ? start : 0,
+end: Number.isInteger(end) && end <= 1440 ? end : 1440,
+
+```
+
+
+* **Confidence:** High
+
+---
+
+### Risk 2: Blocked-room check precedes input syntax validation (`AC3` vs. `AC1`)
+
+* **ID:** `RSK-02`
+* **Category:** Correctness
+* **Cause -> Event -> Consequence:** `evaluate()` checks `if (blocked)` on line 51 before validating that `startTrim` and `endTrim` are valid integers within `0 <= start < end <= 1440` (lines 54–64) -> When the room toggle is set to blocked and a user submits malformed or impossible intervals (e.g., `start="abc"`, `end="xyz"` or `start="800"`, `end="700"`), `evaluate()` returns `{ kind: 'unavailable', code: 'BLOCKED' }` -> Clicking "Explain availability" then clamps the malformed strings to `00:00–24:00` (or passes `800–700`) and tells the user `Room B-204 00:00–24:00 is unavailable because the room is currently blocked` instead of rejecting the invalid time input (`INVALID_TIME`).
+* **Affected file and line numbers:** `src/availability.ts`, lines 50–64 (and `src/App.tsx`, lines 70–76).
+* **Exact code line or command that would confirm it:**
+```ts
+if (blocked) {
+  return { kind: 'unavailable', code: 'BLOCKED', reason: 'This room is currently blocked for bookings.' };
+}
+
+```
+
+
+* **Confidence:** High
+
+---
+
+### Risk 3: Race condition and dangling timer in `getExplanation` / `handleExplain`
+
+* **ID:** `RSK-03`
+* **Category:** Correctness / Maintainability
+* **Cause -> Event -> Consequence:** `handleExplain()` fires an uncancelled `getExplanation(input).then(...)` promise without tracking request identity or aborting in-flight calls, while `getExplanation()` creates a `setTimeout` inside `Promise.race` that is never cleared with `clearTimeout` -> If a user clicks "Explain availability" (which stays enabled or after a quick state reset/re-check) or triggers overlapping requests/unmounts, a late-resolving promise overwrites `explainState` for a newer check, and the 3-second timer stays active in the event loop after `mockExplainAdapter` resolves at 600 ms.
+* **Affected file and line numbers:** `src/App.tsx`, lines 79–81; `src/explain/explainService.ts`, lines 38–43.
+* **Exact code line or command that would confirm it:**
+```ts
+const result = await Promise.race([
+  mockExplainAdapter(input),
+  new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('explanation timed out')), TIMEOUT_MS),
+  ),
+]);
+
+```
+
+
+* **Confidence:** High
+
+---
+
+### Risk 4: Unused `question` state and duplicated magic constants violate maintainability & conventions
+
+* **ID:** `RSK-04`
+* **Category:** Maintainability
+* **Cause -> Event -> Consequence:** `App.tsx` collects and sanitizes `question` state (lines 32, 265–281) that is never passed to `ExplainInput` or `getExplanation()`, uses hardcoded `1440` instead of `DAY_MINUTES` on line 73 (violating `AGENTS.md` Section 5), and imports relative paths (`./explain/contract`, `./explain/explainService`) instead of the required `@/` alias (`AGENTS.md` Section 5 & `.bolt/prompt` line 7) -> Future contributors or agents modifying the explanation feature may assume `question` is wired into the adapter or break path consistency and `DAY_MINUTES` single-source-of-truth rules.
+* **Affected file and line numbers:** `src/App.tsx`, lines 14–15, 32, 73, and 265–281 (also `src/explain/contract.ts`, line 33).
+* **Exact code line or command that would confirm it:**
+```tsx
+end: Number.isInteger(end) && end <= 1440 ? end : 1440,
+
+```
+
+
+* **Confidence:** High
+
+---
+
+### Risk 5: Transitive dependency vulnerabilities in `npm ci` audit
+
+* **ID:** `RSK-05`
+* **Category:** Dependency
+* **Cause -> Event -> Consequence:** `package-lock.json` pins devDependency trees (`vite@^5.4.2`, `vitest@^1.6.0`, `eslint@^9.9.1`, `typescript-eslint@^8.3.0`) that contain 23 known npm advisories (including 13 high and 2 critical in dev dependencies, per the baseline `npm ci` report, though `npm audit --omit=dev` reports 0) -> Running builds, test runners, or local dev servers (`npm run dev`) in untrusted environments or processing untrusted inputs through vulnerable dev tooling exposes the developer/CI environment to known CVEs, while `AGENTS.md` Section 7 forbids running `npm audit fix` or upgrading dependencies without explicit human approval.
+* **Affected file and line numbers:** `package.json`, lines 20–36, and `package-lock.json` (lockfile).
+* **Exact code line or command that would confirm it:**
+```bash
+npm audit
+
+```
+
+
+* **Confidence:** Medium *(Note: I am **guessing** about which specific packages and CVEs account for the 13 high and 2 critical vulnerabilities because `package-lock.json` contents are not included in the attached file, only the `npm ci` summary count.)*
+
+---
+
+### Risk 6: Third-party metadata asset URLs in `index.html` and URL query-parameter mock injection
+
+* **ID:** `RSK-06`
+* **Category:** Security
+* **Cause -> Event -> Consequence:** `index.html` embeds external Bolt.new OpenGraph/Twitter image URLs (`[https://bolt.new/static/og_default.png](https://bolt.new/static/og_default.png)`), and `getMockMode()` reads `window.location.search` (`?mock=error` / `?mock=timeout`) unconditionally in production builds -> Sharing the deployed prototype URL leaks preview/crawler requests to `bolt.new` (or breaks social previews if Bolt changes/removes the asset), and any user sharing a link with `?mock=error` or `?mock=timeout` forces degraded fallback explanations across the UI without authentication or build-flag gating.
+* **Affected file and line numbers:** `index.html`, lines 8 and 10; `src/explain/mockAdapter.ts`, lines 12–17.
+* **Exact code line or command that would confirm it:**
+```html
+<meta property="og:image" content="https://bolt.new/static/og_default.png" />
+
+```
+
+
+and
+```ts
+const value = new URLSearchParams(search).get('mock');
+return value === 'error' || value === 'timeout' ? value : 'ok';
+
+```
+
+
+* **Confidence:** Medium
+
+---
+
+### Risk 7: Contradictory instructions between `.bolt/prompt` and `AGENTS.md` cause scope creep or unauthorized edits
+
+* **ID:** `RSK-07`
+* **Category:** Agent Operations
+* **Cause -> Event -> Consequence:** `.bolt/prompt` (line 1) instructs AI builders to *"Make webpages that are fully featured and worthy for production"*, whereas `AGENTS.md` (Section 7, lines 68–70) explicitly forbids new rooms, catalogs, pages, features, network calls, or editing `.bolt/`, and notes (lines 5–6) that Bolt.new and plain chat assistants do NOT auto-load `AGENTS.md` -> When an agent runs in Bolt.new or a chat session where the human forgets to paste `AGENTS.md`, the agent automatically ingests `.bolt/prompt` and implements multi-room catalogs, booking persistence, or Supabase/network integrations, violating `AC1–AC5` and repository constraints.
+* **Affected file and line numbers:** `.bolt/prompt`, line 1; `AGENTS.md`, lines 5–6 and 68–70.
+* **Exact code line or command that would confirm it:**
+```text
+For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
+
+```
+
+
+* **Confidence:** High
+
+---
+
+### Risk 8: Silent omission of root `tsconfig.node.json` checks and zero test coverage on `src/explain/*` and `App.tsx` interactions
+
+* **ID:** `RSK-08`
+* **Category:** Agent Operations / Maintainability
+* **Cause -> Event -> Consequence:** `npm run typecheck` runs `tsc --noEmit -p tsconfig.app.json` (which only includes `["src", "tests"]`), leaving `vite.config.ts` (`tsconfig.node.json`) unchecked, and `tests/` has no unit or integration tests for `src/explain/contract.ts`, `src/explain/explainService.ts`, `src/explain/mockAdapter.ts`, or `App.tsx`'s `handleExplain` wiring -> An agent modifying `vite.config.ts` or `src/explain/*` can pass `npm run verify` (25/25 tests) while introducing type errors in Vite config or regressions in input validation, timeout fallback behavior, or `ExplainInput` construction.
+* **Affected file and line numbers:** `package.json`, line 11; `tsconfig.app.json`, line 29; `tests/` directory (`tests/availability.test.ts`, `tests/reasonCode.test.ts`, `tests/regression.test.ts`).
+* **Exact code line or command that would confirm it:**
+```json
+"typecheck": "tsc --noEmit -p tsconfig.app.json",
+
+```
+
+
+*(Note: I am **guessing** about the exact contents of `tsconfig.node.json` since it is listed in the file tree and referenced in `tsconfig.json` line 5, but its file body is omitted from the attached bundle.)*
+* **Confidence:** Medium

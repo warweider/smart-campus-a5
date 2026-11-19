@@ -1,0 +1,14 @@
+import { it, expect } from 'vitest';
+import { evaluate as oldEval } from './_baseline_availability';
+import { evaluate as newEval } from '../src/availability';
+it('new evaluate == baseline evaluate on {kind, reason} for every input in the grid', () => {
+  const vals = ['', ' ', 'abc', '-1', '0', '539', '540', '541', '599', '600', '630', '659', '660', '661', '700', '720', '780', '781', '1000', '1439', '1440', '1441', '600.5', '0660'];
+  const bookingSets = [[], [{ start: 600, end: 660 }], [{ start: 700, end: 760 }, { start: 600, end: 660 }]];
+  let n = 0;
+  for (const s of vals) for (const e of vals) for (const blocked of [false, true]) for (const bk of bookingSets) {
+    const o = oldEval(s, e, 540, blocked, bk) as { kind: string; reason?: string };
+    const { code: _c, ...rest } = newEval(s, e, 540, blocked, bk) as { code: string; kind: string; reason?: string };
+    void _c; expect(rest).toEqual(o); n++;
+  }
+  console.log('compared cases:', n);
+});

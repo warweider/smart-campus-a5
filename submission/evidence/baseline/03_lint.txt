@@ -1,0 +1,7 @@
+$ npm run lint
+# run: 2026-11-19T04:46:27Z node v22.23.5
+
+> vite-react-typescript-starter@0.0.0 lint
+> eslint .
+
+# exit code: 0

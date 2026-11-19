@@ -1,0 +1,40 @@
+import { it, expect, vi } from 'vitest';
+import { evaluate } from '../src/availability';
+import { deriveReasonCode, validateExplainInput } from '../src/explain/contract';
+import { getExplanation } from '../src/explain/explainService';
+const B = [{ start: 600, end: 660 }];
+// Mirrors App.tsx handleExplain lines 68-76 exactly
+function buildInput(s: string, e: string) {
+  const v = evaluate(s, e, 540, false, B);
+  const start = Number(s.trim()); const end = Number(e.trim());
+  return { v, input: { roomLabel: 'Room B-204',
+    start: Number.isInteger(start) && start >= 0 ? start : 0,
+    end: Number.isInteger(end) && end <= 1440 ? end : 1440,
+    isAvailable: v.kind === 'available', reasonCode: deriveReasonCode(v) } };
+}
+it('P1 invalid text input -> explanation slot', async () => {
+  const { v, input } = buildInput('abc', '700');
+  const r = await getExplanation(input);
+  console.log('P1', JSON.stringify(v), JSON.stringify(input), JSON.stringify(r));
+}, 10000);
+it('P2 out-of-range input -> explanation slot', async () => {
+  const { v, input } = buildInput('1500', '1600');
+  console.log('P2 validate', validateExplainInput(input));
+  const r = await getExplanation(input);
+  console.log('P2', JSON.stringify(v), JSON.stringify(input), JSON.stringify(r));
+}, 10000);
+it('P3 reason code depends on message text', () => {
+  console.log('P3', deriveReasonCode({ kind: 'unavailable', reason: 'Room is blocked.' }));
+  console.log('P3b', deriveReasonCode({ kind: 'error', reason: 'Start must be later than now' }));
+});
+it('P4 timeout timer still pending after a fast answer', async () => {
+  vi.useFakeTimers();
+  const p = getExplanation({ roomLabel: 'Room B-204', start: 800, end: 830, isAvailable: true, reasonCode: 'AVAILABLE' });
+  await vi.advanceTimersByTimeAsync(700);
+  const r = await p;
+  console.log('P4 result', r.usedFallback, 'pending timers', vi.getTimerCount());
+  vi.useRealTimers();
+});
+it('P5 blocked + invalid text', () => {
+  console.log('P5', JSON.stringify(evaluate('abc', '', 540, true, B)), JSON.stringify(evaluate('abc', 'x', 540, true, B)));
+});

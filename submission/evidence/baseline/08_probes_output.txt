@@ -1,0 +1,9 @@
+P1 {"kind":"error","reason":"Start and end must be whole numbers (minutes after midnight)."} {"roomLabel":"Room B-204","start":0,"end":700,"isAvailable":false,"reasonCode":"INVALID_TIME"} {"output":{"explanation":"Fallback: the times for Room B-204 00:00–11:40 are invalid and were not checked."},"usedFallback":true}
+P2 validate null
+P2 {"kind":"error","reason":"Times must be between 0 and 1440 (00:00 and 24:00)."} {"roomLabel":"Room B-204","start":1500,"end":1440,"isAvailable":false,"reasonCode":"INVALID_TIME"} {"output":{"explanation":"Fallback: the times for Room B-204 25:00–24:00 are invalid and were not checked."},"usedFallback":true}
+P3 OVERLAP
+P3b INVALID_TIME
+P4 result false pending timers 1
+ ✓ tests/_probe.test.ts  (5 tests) 607ms
+P5 {"kind":"error","reason":"Please enter both a start and an end time."} {"kind":"unavailable","reason":"This room is currently blocked for bookings."}
+      Tests  5 passed (5)

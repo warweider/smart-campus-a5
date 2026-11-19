@@ -1,0 +1,13 @@
+
+ RUN  v1.6.1 /home/claude/work/repo
+
+stdout | tests/_diff.test.ts > new evaluate == baseline evaluate on {kind, reason} for every input in the grid
+compared cases: 3456
+
+ ✓ tests/_diff.test.ts  (1 test) 34ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  09:48:48
+   Duration  393ms (transform 64ms, setup 0ms, collect 46ms, tests 34ms, environment 0ms, prepare 127ms)
+
