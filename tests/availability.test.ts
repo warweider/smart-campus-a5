@@ -58,7 +58,7 @@ describe('AC4 overlap', () => {
 
 describe('AC5 result and non-mutation', () => {
   it('T11 returns Available for a free slot', () => {
-    expect(evaluate('800', '830', NOW, false, bookings)).toEqual({ kind: 'available' });
+    expect(evaluate('800', '830', NOW, false, bookings)).toEqual({ kind: 'available', code: 'AVAILABLE' });
   });
   it('T12 does not change the bookings array (order and values)', () => {
     evaluate('630', '690', NOW, false, bookings);

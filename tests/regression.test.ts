@@ -16,9 +16,9 @@ describe('R1 the UI uses the tested rules (single source of truth)', () => {
     expect(appSource).not.toMatch(/const\s+MAX_DURATION\s*=/);
   });
   it('RG03 the UI messages are produced by the tested module (AC6 wording kept)', () => {
-    expect(evaluate('', '', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'error', reason: 'Please enter both a start and an end time.' });
-    expect(evaluate('500', '560', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'error', reason: 'Start must be after the current time (09:00 / 540).' });
-    expect(evaluate('630', '690', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'unavailable', reason: 'Overlaps an existing booking (10:00–11:00).' });
-    expect(evaluate('660', '720', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'available' });
+    expect(evaluate('', '', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'error', code: 'INVALID_TIME', reason: 'Please enter both a start and an end time.' });
+    expect(evaluate('500', '560', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'error', code: 'PAST_TIME', reason: 'Start must be after the current time (09:00 / 540).' });
+    expect(evaluate('630', '690', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'unavailable', code: 'OVERLAP', reason: 'Overlaps an existing booking (10:00–11:00).' });
+    expect(evaluate('660', '720', NOW, false, UI_BOOKINGS)).toEqual({ kind: 'available', code: 'AVAILABLE' });
   });
 });

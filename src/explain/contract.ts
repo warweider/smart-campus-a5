@@ -1,16 +1,8 @@
-import type { Verdict } from '@/availability';
-import { toHHMM } from '@/availability';
+import type { Verdict, ReasonCode } from '@/availability';
+import { toHHMM, REASON_CODES } from '@/availability';
 
-export const REASON_CODES = [
-  'AVAILABLE',
-  'OVERLAP',
-  'BLOCKED',
-  'INVALID_TIME',
-  'PAST_TIME',
-  'TOO_LONG',
-] as const;
-
-export type ReasonCode = (typeof REASON_CODES)[number];
+export { REASON_CODES };
+export type { ReasonCode };
 
 export type ExplainInput = {
   roomLabel: string;
@@ -22,18 +14,10 @@ export type ExplainInput = {
 
 export type ExplainOutput = { explanation: string };
 
-// Derives a stable reason code from the authoritative checker result
-// without changing it. Matches on the tested AC6 wording prefixes.
+// The reason code now comes from the checker itself (Task 03). Before, it was
+// guessed from the message text, so a wording change silently mislabelled verdicts.
 export function deriveReasonCode(verdict: Verdict): ReasonCode {
-  if (verdict.kind === 'available') return 'AVAILABLE';
-  if (verdict.kind === 'unavailable') {
-    return verdict.reason.startsWith('This room is currently blocked')
-      ? 'BLOCKED'
-      : 'OVERLAP';
-  }
-  if (verdict.reason.startsWith('Start must be after the current time')) return 'PAST_TIME';
-  if (verdict.reason.startsWith('Booking duration is')) return 'TOO_LONG';
-  return 'INVALID_TIME';
+  return verdict.code;
 }
 
 // Validates untrusted input; returns null when the shape is wrong.
